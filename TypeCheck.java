@@ -1,9 +1,7 @@
 import syntaxtree.*;
 import visitor.*;
 import java.util.*;
-import others.*;
 
-import others.MiniJavaParser;
 
 public class Typecheck {
 	public static void main(String[] args) {
@@ -61,9 +59,15 @@ class ClassType extends GType{
 		this.methods = methods;
 		this.fields = fields;
 	}
-	
-	
-	
+
+	public static ClassType getClassType(String className, List<ClassType> classList) {
+		for (ClassType ct : classList)
+			if (className.equals(ct.className)){
+				return ct;
+			}
+		return null;
+	}
+
 }
 
 //Type: Method
@@ -86,15 +90,16 @@ class ClassVisitor extends GJVoidDepthFirst<List<ClassType>>{
 		String cname = n.f1.f0.toString();
 		//Arg for mainclass should be String[]
 		ClassType newclass = new ClassType(cname, null, null, null, null);
+		System.out.println("Add new class " + cname);
 		classList.add(newclass);
 	}
 	
 	public void visit(ClassDeclaration n, List<ClassType> classList) {
 		String cname = n.f1.f0.toString();
 
-		List<Method> methods;
-		
+		List<Method> methods;		
 		ClassType newclass = new ClassType(cname, null, null, null, null);
+		System.out.println("Add new class " + cname);
 		classList.add(newclass);
 	}
 	
@@ -102,6 +107,7 @@ class ClassVisitor extends GJVoidDepthFirst<List<ClassType>>{
 	public void visit(ClassExtendsDeclaration n, List<ClassType> classList) {
 		String cname = n.f1.f0.toString();
 		ClassType newclass = new ClassType(cname, null, null, null, null);
+		System.out.println("Add new class " + cname);
 		classList.add(newclass);
 	}
 }
@@ -137,9 +143,10 @@ class MethodVisitor extends GJVoidDepthFirst<List<GType>>{
 		List<GType> args = new ArrayList<GType>();
 		n.f4.accept(this, args);
 		Method m = new Method(method_name, return_value, args); 
-		
+		curr_class.methods.add(m);		
 	}
 	
+
 }
 
 class IntType extends GType{
