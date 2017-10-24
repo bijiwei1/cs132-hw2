@@ -9,10 +9,14 @@ public class Typecheck {
 			Node root = new MiniJavaParser(System.in).Goal();
 			System.out.println("Parse successful");
 			
-			//List to store all classes
+			//Load all classes
 			List<ClassType> classList = new ArrayList<ClassType>();
 			ClassVisitor cv = new ClassVisitor();
-			root.accept(cv, classList);			
+			root.accept(cv, classList);		
+			
+			//Load all methods to classes
+			//MethodVisitor mv = new MethodVisitor(classList);
+			//root.accept(mv, null);
 			
 		}catch (ParseException e) {
 			System.err.println(e);
@@ -62,7 +66,7 @@ class ClassType extends GType{
 
 	public static ClassType getClassType(String className, List<ClassType> classList) {
 		for (ClassType ct : classList)
-			if (className.equals(ct.className)){
+			if (className.equals(ct.class_name)){
 				return ct;
 			}
 		return null;
@@ -86,21 +90,27 @@ class Method extends GType{
 }
 
 class ClassVisitor extends GJVoidDepthFirst<List<ClassType>>{
+	
 	public void visit(MainClass n, List<ClassType> classList) {
 		String cname = n.f1.f0.toString();
 		//Arg for mainclass should be String[]
 		ClassType newclass = new ClassType(cname, null, null, null, null);
 		System.out.println("Add new class " + cname);
 		classList.add(newclass);
+		
+		//
 	}
 	
 	public void visit(ClassDeclaration n, List<ClassType> classList) {
-		String cname = n.f1.f0.toString();
-
-		List<Method> methods;		
+		//load class into class tree
+		String cname = n.f1.f0.toString();	
 		ClassType newclass = new ClassType(cname, null, null, null, null);
 		System.out.println("Add new class " + cname);
 		classList.add(newclass);
+		
+		//load methods and args into class
+		MethodVisitor mv = new MethodVisitor(newclass);
+		n.f4.accept(mv, null);
 	}
 	
 
@@ -109,7 +119,12 @@ class ClassVisitor extends GJVoidDepthFirst<List<ClassType>>{
 		ClassType newclass = new ClassType(cname, null, null, null, null);
 		System.out.println("Add new class " + cname);
 		classList.add(newclass);
+		
+		//load methods and args into class
+		MethodVisitor mv = new MethodVisitor(newclass);
+		n.f6.accept(mv, null);
 	}
+
 }
 
 
@@ -122,20 +137,20 @@ class MethodVisitor extends GJVoidDepthFirst<List<GType>>{
 		this.curr_class = curr_class;
 	}
 	
-	//TypeDeclaration  ??
+	//TypeDeclaration  
 	public void visit(Goal n, List<GType> methodArgs) {
 		n.f1.accept(this, methodArgs);
 	}
 
 	// MethodDeclaration()
-	public void visit(ClassDeclaration n, List<GType> methodArgs) {
-		n.f4.accept(this, methodArgs);
-	}
+	//public void visit(ClassDeclaration n, List<GType> methodArgs) {
+	//	n.f4.accept(this, methodArgs);
+	//}
 	
 	// MethodDeclaration
-	public void visit(ClassExtendsDeclaration n, List<GType> methodArgs) {
-		n.f6.accept(this, methodArgs);
-	}
+	//public void visit(ClassExtendsDeclaration n, List<GType> methodArgs) {
+	//	n.f6.accept(this, methodArgs);
+	//}
 	
 	public void visit(MethodDeclaration n, List<GType> methodArgs) {
 		String method_name = n.f2.f0.toString();
@@ -143,11 +158,12 @@ class MethodVisitor extends GJVoidDepthFirst<List<GType>>{
 		List<GType> args = new ArrayList<GType>();
 		n.f4.accept(this, args);
 		Method m = new Method(method_name, return_value, args); 
+		//ClassType curr_class = classlist.getClass();
 		curr_class.methods.add(m);		
+		System.out.println("Add new method " + method_name);
 	}
-	
-
 }
+
 
 class IntType extends GType{
 	
